@@ -1,0 +1,26 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:latest
+    container_name: sqlserver_container
+    ports:
+      - "1433:1433"
+    environment:
+      SA_PASSWORD: "YourStrong!Passw0rd"
+      ACCEPT_EULA: "Y"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+  bookCatalog:
+    image: ${DOCKER_REGISTRY-}bookcatalog
+    build:
+      context: ./services/BookCatalog
+      dockerfile: BookCatalog/Dockerfile
+    container_name: bookcatalog_container
+    ports:
+      - 8080:8080
+    depends_on:
+      - sqlserver
+    environment:
+      ConnectionStrings__Database: "Server=sqlserver;Database=BookCatalog;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
+
+volumes:
+  sqlserver_data:
