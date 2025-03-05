@@ -26,3 +26,34 @@ jobs:
 
       - name: Run Test Book Catalog Tests
         run: dotnet test services/BookCatalog/BookCatalog.Tests.Integration/BookCatalog.Tests.Integration.csproj --no-build --verbosity normal
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./services/BookCatalog
+          push: true
+          tags: ghcr.io/${{ github.repository }}/bookcatalog:${{ github.sha }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep
+        uses: azure/arm-deploy@v1
+        with:
+          resourceGroupName: ${{ secrets.AZURE_RESOURCE_GROUP }}
+          template: ./infrastructure/bicep/main.bicep
+          parameters: >
+            environmentName=dev
+            sqlAdminLogin=${{ secrets.SQL_ADMIN_LOGIN }}
+            sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
+            repositoryName=${{ github.repository }}
+            imageTag=${{ github.sha }}
