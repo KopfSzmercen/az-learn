@@ -59,7 +59,7 @@ resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2021-06
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 5
+    retentionInDays: 1
   }
 }
 
