@@ -35,8 +35,8 @@ resource sqlDatabase 'Microsoft.Sql/servers/databases@2022-05-01-preview' = {
     name: 'BookCatalogDb'
     location: location
     sku: {
-      name: 'Free'
-      tier: 'Free'
+      name: 'Basic'
+      tier: 'Basic'
     }
 }
 
