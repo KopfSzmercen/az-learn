@@ -7,36 +7,54 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  build:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v3
-
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: "9.0.x"
-
       - name: Restore dependencies
         run: dotnet restore services/BookCatalog/BookCatalog.sln
-
       - name: Build
         run: dotnet build services/BookCatalog/BookCatalog.sln --no-restore
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-artifacts
+          path: services/BookCatalog
 
-      - name: Run Test Book Catalog Tests
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-artifacts
+          path: services/BookCatalog
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: "9.0.x"
+      - name: Run Book Catalog Tests
         run: dotnet test services/BookCatalog/BookCatalog.Tests.Integration/BookCatalog.Tests.Integration.csproj --no-build --verbosity normal
 
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
-
       - name: Set lowercase repo name
         run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
@@ -45,11 +63,17 @@ jobs:
           push: true
           tags: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}/bookcatalog:${{ github.sha }}
 
+  deploy:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
       - name: Azure Login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
+      - name: Set lowercase repo name
+        run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
       - name: Deploy Bicep
         uses: azure/arm-deploy@v1
         with:
