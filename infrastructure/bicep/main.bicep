@@ -108,6 +108,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               }
             ]
             resources: {
+              #disable-next-line BCP036
               cpu: '0.25'
               memory: '.5Gi'
             }
