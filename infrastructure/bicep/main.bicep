@@ -107,7 +107,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           {
             server: 'ghcr.io'
             username: split(repositoryName, '/')[0]
-            passwordSecretRef: githubPat
+            passwordSecretRef: 'github-pat'
           }
         ]
       }
