@@ -55,13 +55,22 @@ jobs:
           password: ${{ secrets.GHCR_PAT }}
       - name: Set lowercase repo name
         run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-      - name: Build and push Docker image
+      - name: Build and push BookCatalog API image
         uses: docker/build-push-action@v4
         with:
           context: ./services/BookCatalog
           file: ./services/BookCatalog/BookCatalog/Dockerfile
           push: true
           tags: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}/bookcatalog:${{ github.sha }}
+      - name: Build and push BookCatalog Client image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./web/book-catalog-client
+          file: ./web/book-catalog-client/Dockerfile
+          push: true
+          tags: ghcr.io/${{ env.REPO_NAME_LOWERCASE }}/bookcatalogclient:${{ github.sha }}
+          build-args: |
+            BACKEND_URL=https://az-learn-app-dev.icysky-82aaa392.polandcentral.azurecontainerapps.io/
 
   deploy:
     needs: publish

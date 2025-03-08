@@ -138,5 +138,58 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
      
     }
 }
-  // Output the Container App URL
+
+// Container App for the Next.js client
+resource containerAppClient 'Microsoft.App/containerApps@2024-03-01' = {
+  name: 'az-learn-client-${environmentName}'
+  location: location
+  properties: {
+    managedEnvironmentId: containerAppEnvironment.id
+    configuration: {
+      ingress: {
+        external: true
+        targetPort: 3000
+      }
+      secrets: [
+        {
+          name: 'github-pat'
+          value: githubPat
+        }
+      ]
+      registries: [
+        {
+          server: 'ghcr.io'
+          username: split(repositoryName, '/')[0]
+          passwordSecretRef: 'github-pat'
+        }
+      ]
+    }
+    template: {
+      containers: [
+        {
+          name: 'bookcatalogclient'
+          image: 'ghcr.io/${repositoryName}/bookcatalogclient:${imageTag}'
+          env: [
+            {
+              name: 'NEXT_PUBLIC_API_URL'
+              value: 'https://${containerApp.properties.configuration.ingress.fqdn}'
+            }
+          ]
+          resources: {
+            #disable-next-line BCP036
+            cpu: '0.25'
+            memory: '.5Gi'
+          }
+        }
+      ]
+      scale: {
+        minReplicas: 1
+        maxReplicas: 1
+      }
+    }
+  }
+}
+
+// Output the Container App URL
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
+output clientUrl string = 'https://${containerAppClient.properties.configuration.ingress.fqdn}'

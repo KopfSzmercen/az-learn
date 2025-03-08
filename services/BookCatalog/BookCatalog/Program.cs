@@ -26,7 +26,11 @@ await using (var scope = serviceScopeFactory.CreateAsyncScope())
     await dbContext.Database.MigrateAsync();
 }
 
-if (app.Environment.IsDevelopment()) app.MapOpenApi();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(options => options.SwaggerEndpoint("/openapi/v1.json", "v1"));
+}
 
 app.UseHttpsRedirection();
 

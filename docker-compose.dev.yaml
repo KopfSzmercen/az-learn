@@ -22,5 +22,20 @@ services:
     environment:
       ConnectionStrings__Database: "Server=sqlserver;Database=BookCatalog;User Id=sa;Password=YourStrong!Passw0rd;TrustServerCertificate=True;"
 
+  bookCatalogClient:
+    image: ${DOCKER_REGISTRY-}bookcatalogclient
+    build:
+      context: ./web/book-catalog-client
+      dockerfile: Dockerfile
+      args:
+        - BACKEND_URL=http://bookcatalog_container:8080
+    container_name: bookcatalogclient_container
+    ports:
+      - 3000:3000
+    environment:
+      - NEXT_PUBLIC_API_URL=http://bookcatalog_container:8080
+    depends_on:
+      - bookCatalog
+
 volumes:
   sqlserver_data:
