@@ -32,6 +32,7 @@ app.UseHttpsRedirection();
 
 app.MapGet("/books", async (AppDbContext dbContext) => await dbContext.Books.ToListAsync());
 
+
 app.MapPost("/books", async (AppDbContext dbContext, Book book) =>
 {
     dbContext.Books.Add(book);
