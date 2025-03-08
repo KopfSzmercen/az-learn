@@ -16,6 +16,10 @@ param repositoryName string
 
 @description('Container image tag (usually commit SHA)')
 param imageTag string
+
+@description('GitHub Personal Access Token for accessing container images')
+@secure()
+param githubPat string
   
 
 // SQL Server resource
@@ -94,6 +98,17 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             name: 'sql-connection-string'
             value: 'Server=tcp:${sqlServer.name}${environment().suffixes.sqlServerHostname},1433;Initial Catalog=${sqlDatabase.name};Persist Security Info=False;User ID=${sqlAdminLogin};Password=${sqlAdminPassword};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;'
           }
+          {
+            name: 'github-pat'
+            value: githubPat
+          }
+        ]
+        registries: [
+          {
+            server: 'ghcr.io'
+            username: split(repositoryName, '/')[0]
+            passwordSecretRef: githubPat
+          }
         ]
       }
       template: {
@@ -118,7 +133,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           minReplicas: 1
           maxReplicas: 1
         }
+        
       }
+     
     }
 }
   // Output the Container App URL

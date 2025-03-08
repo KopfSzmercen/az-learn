@@ -85,3 +85,4 @@ jobs:
             sqlAdminPassword=${{ secrets.SQL_ADMIN_PASSWORD }}
             repositoryName=${{ env.REPO_NAME_LOWERCASE }}
             imageTag=${{ github.sha }}
+            githubPat=${{ secrets.GHCR_PAT }}
